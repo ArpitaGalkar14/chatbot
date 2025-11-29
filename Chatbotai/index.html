@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Career Guidance AI Chatbot</title>
+<style>
+/* ==== GLOBAL LAYOUT ==== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+html,body{height:100%;margin:0;padding:0;}
+body{
+    margin:0;
+    background:#000;
+    font-family:'Poppins',sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+/* ==== CHAT WINDOW ==== */
+.chat-container{
+    width:420px;
+    max-width:95%;
+    height:88vh;
+    background:#0d0d0d;
+    border-radius:18px;
+    box-shadow:0 0 35px rgba(0,230,255,0.08), inset 0 0 20px #001218;
+    display:flex;
+    flex-direction:column;
+    padding:18px;
+    border:1px solid rgba(0,231,255,0.15);
+}
+
+/* ==== HEADER ==== */
+.header {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    justify-content:center;
+    margin-bottom:6px;
+}
+.header h2{
+    color:#00e7ff;
+    font-size:20px;
+    margin:0;
+    letter-spacing:0.4px;
+}
+.robot{
+    width:54px;
+    height:54px;
+    display:block;
+    filter:drop-shadow(0 6px 18px rgba(0,180,255,0.12));
+}
+/* Glowing shadow for entire chatbot */
+.chat-container{
+    box-shadow:
+        0 0 35px rgba(0,230,255,0.4),
+        0 0 60px rgba(0,230,255,0.3),
+        inset 0 0 20px #001218;
+    animation: glowPulse 2s infinite alternate;
+}
+
+/* Pulsing glow animation */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 35px rgba(0,230,255,0.4), 0 0 60px rgba(0,230,255,0.3), inset 0 0 20px #001218; }
+    50% { box-shadow: 0 0 50px rgba(0,230,255,0.6), 0 0 80px rgba(0,230,255,0.4), inset 0 0 20px #001218; }
+    100% { box-shadow: 0 0 35px rgba(0,230,255,0.4), 0 0 60px rgba(0,230,255,0.3), inset 0 0 20px #001218; }
+}
+
+/* ==== CHAT BOX ==== */
+.chat-box{
+    flex:1;
+    overflow-y:auto;
+    padding-right:6px;
+    padding-left:6px;
+    margin-top:8px;
+    
+
+
+}
+
+/* ==== BUBBLES ==== */
+.message{
+    padding:12px 14px;
+    margin:10px 0;
+    border-radius:12px;
+    font-size:14px;
+    max-width:82%;
+    line-height:1.45;
+    word-wrap:break-word;
+    box-shadow:0 4px 14px rgba(0,0,0,0.45);
+}
+.user{
+    background:linear-gradient(90deg,#00e7ff,#8ef2ff);
+    color:#001;
+    margin-left:auto;
+    border-bottom-right-radius:4px;
+}
+.bot{
+    background:linear-gradient(90deg,#07101a,#00151a);
+    color:#7ff7ff;
+    border:1px solid rgba(0,231,255,0.09);
+    margin-right:auto;
+}
+
+/* ==== INPUT FIELD ==== */
+.input-area{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+}
+input{
+    flex:1;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid rgba(0,231,255,0.12);
+    background:#000;
+    color:#00eaff;
+    outline:none;
+    font-size:14px;
+}
+input::placeholder{ color:#00363b; }
+
+button{
+    background:linear-gradient(180deg,#00e7ff,#00b4ff);
+    border:none;
+    padding:12px 16px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    color:#001;
+    box-shadow:0 6px 18px rgba(0,231,255,0.06);
+}
+button:hover{ transform:translateY(-2px); transition:all .15s ease; }
+
+/* small helper */
+.small{
+    font-size:12px;
+    color:#77f7ff;
+    text-align:center;
+    margin-top:6px;
+}
+.message.bot {
+    background: rgba(0, 200, 255, 0.2);
+    box-shadow: 0 0 12px #00eaff inset;
+    transition: 0.3s;
+}
+.message.bot:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 18px #0ff inset;
+}
+/*color extra */
+body {
+    background: radial-gradient(circle at top left, #00eaff, transparent 40%),
+                radial-gradient(circle at bottom right, #ff00f2, transparent 40%),
+                #000428;
+    background-size: cover;
+} 
+
+
+
+/* typing cursor small dot */
+.typing {
+    display:inline-block;
+    width:6px;height:6px;border-radius:50%;
+    background:#00e7ff;margin-left:6px;
+    animation:blink 1s infinite;
+    vertical-align:middle;
+}
+@keyframes blink{ 0%{opacity:0.15}50%{opacity:1}100%{opacity:0.15} }
+</style>
+</head>
+<body>
+
+<div class="chat-container" role="main" aria-label="Career Guidance Chatbot">
+    <div class="header">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="robot avatar" class="robot">
+        <h2>Career Guidance AI</h2>
+    </div>
+
+    <div id="chat-box" class="chat-box" aria-live="polite"></div>
+
+    <div class="input-area" role="region" aria-label="Message input">
+        <input id="input" placeholder="Ask anything about courses, fees, jobs... (press Enter to send)" autocomplete="off" />
+        <button id="sendBtn" aria-label="Send message">Send</button>
+    </div>
+
+    <div class="small">Tip: ask "more details about BTech" or just "more details" after a course question.</div>
+</div>
+
+<script>
+/* ========= Simple conversational engine with follow-up memory ========= */
+
+// Sound effects
+const sendSound = new Audio('send.mp3');
+const receiveSound = new Audio('receive.mp3');
+
+/* Last topic memory (stream or course) for "more details" followups */
+let lastTopic = null;
+
+/* Database of course/stream short & expanded info */
+const KB = {
+  streams: {
+    "after 10": {
+      short: "After 10th you can choose: Science, Commerce or Arts. Tell me which stream you prefer.",
+      details: "After 10th you can choose vocational/technical or academic paths. Examples:\n\n• Diploma in Engineering (2–3 yrs): hands-on technical skills for jobs like technician, junior engineer.\n• ITI/Trades: short-term trade courses for quickly employable skills.\n• Polytechnic: 3-year diploma with lateral entry to engineering after 12th.\n\nIf you tell your interest (machines, computers, healthcare, design), I can recommend courses."
+    },
+    "after 12 science": {
+      short: "Science options: Engineering (BTech), MBBS/BDS, BSc (CS/Physics/Chem), Pharmacy, Nursing, BSc (Biotech).",
+      details: "Science (after 12) — expanded:\n\n• BTech / BE (4 years): branches like CSE, ECE, Mechanical, Civil. Eligibility: 12th with PCM + entrance exams (JEE/State).\n• MBBS (5.5 years): for medical doctors — NEET required. High fees in private colleges, excellent career scope.\n• BSc (3 years): Computer Science, Physics, Chemistry — good for research or MSc.\n• BPharm / Pharmacy (4 years): careers in pharma industry, R&D.\n\nWant details on any specific course above? (e.g., BTech, MBBS, BSc CS)"
+    },
+    "after 12 commerce": {
+      short: "Commerce options: BCom, BBA, CA, CS, CMA, Banking, Finance, and later MBA.",
+      details: "Commerce (after 12) — expanded:\n\n• BCom/BBA (3 years): basic commerce/business degrees.\n• CA (Chartered Accountant): professional path with high demand — articleship + exams (long but rewarding).\n• CS/CMA: company secretarial/management accounting paths.\n• Jobs: accounting, finance, banking, analytics. Many pursue MBA for higher roles."
+    },
+    "after 12 arts": {
+      short: "Arts options: BA (various majors), Journalism, Law (after LLB path), Design, Fashion, Social Work.",
+      details: "Arts (after 12) — expanded:\n\n• BA (3 years): majors like History, Psychology, Political Science — gateway to civil services, teaching, research.\n• Journalism & Mass Communication: media careers (reporting, production).\n• Design / Fashion: creative industry roles.\n\nTell me a course name for more detail (e.g., Journalism, Law prep, Fashion Design)."
+    }
+  },
+
+  courses: {
+    "btech": {
+      title: "BTech / BE",
+      duration: "4 years",
+      eligibility: "12th with PCM + entrance exam (JEE Main or state level).",
+      fees: "Govt: low; Private: ₹1–10 Lakh/year depending on college",
+      top_colleges: "IITs, NITs, IIITs, top private engineering colleges.",
+      jobs: "Software Engineer, Developer, Data Scientist, Design Engineer, Consultant.",
+      salary: "Average starting ₹3–12 LPA; top companies pay much higher.",
+      details: "BTech is excellent for engineering careers. Choose branch based on interest (CSE for software, ECE for electronics, Mechanical for manufacturing). Consider internships and coding projects to boost placements."
+    },
+    "mbbs": {
+      title: "MBBS",
+      duration: "5.5 years (including internship)",
+      eligibility: "12th with PCB + NEET (national medical entrance).",
+      fees: "Government colleges: low; Private: extremely high (lakhs per year).",
+      top_colleges: "AIIMS, Government Medical Colleges, top private medical colleges.",
+      jobs: "Doctor (clinical), specialist after MD/MS, researcher, hospital consultant.",
+      salary: "Junior doctors ₹6–12 LPA (varies), specialists higher.",
+      details: "MBBS is a long and demanding path but one of the most respected medical careers. Requires high NEET rank for top colleges."
+    },
+    "bsc cs": {
+      title: "BSc Computer Science",
+      duration: "3 years",
+      eligibility: "12th with science (often PCB/PCM depending on college).",
+      fees: "₹10k–1 Lakh/year",
+      top_colleges: "Top universities' science departments.",
+      jobs: "Junior developer, QA, data analyst, further MSc or MCA.",
+      salary: "₹2–6 LPA starting; can rise with skills and master's degree.",
+      details: "Good for research or if you want a science-based CS path with possible progression to MSc/MCA."
+    },
+    "bcom": {
+      title: "BCom",
+      duration: "3 years",
+      eligibility: "12th in any stream (commerce preferred).",
+      fees: "₹5k–1 Lakh/year",
+      top_colleges: "Top commerce colleges in universities.",
+      jobs: "Accountant, financial analyst, tax consultant, banker.",
+      salary: "₹2–6 LPA starting; CA-qualified or MBA grads earn more.",
+      details: "BCom is flexible; combine with certifications (CA/CS/CPA) or an MBA for higher roles."
+    },
+    "ca": {
+      title: "Chartered Accountant (CA)",
+      duration: "2.5–5 years (depends on passing exams & articleship)",
+      eligibility: "After 12th (foundation) or after graduation route.",
+      fees: "Course fees modest, but articleship pays low stipend initially.",
+      top_colleges: "CA institutes & firms (articleship in CPA firms).",
+      jobs: "Auditor, Financial Consultant, CFO roles in long run.",
+      salary: "Starts low during articleship; after qualification ₹6–20+ LPA depending on role.",
+      details: "CA is a professional route; highly respected in finance. Hard exams, but long-term rewards are strong."
+    },
+    "diploma engineering": {
+      title: "Diploma - Engineering",
+      duration: "2–3 years",
+      eligibility: "After 10th or after 12th (depending on entry)",
+      fees: "₹10k–60k/yr approx",
+      top_colleges: "State polytechnics and private diploma institutes",
+      jobs: "Technician, supervisor, junior engineer; lateral entry to 2nd year of BTech.",
+      salary: "₹1.5–4 LPA starting",
+      details: "Good if you prefer hands-on technical training early and want to join workforce sooner or take lateral entry to BTech."
+    },
+    "iti": {
+      title: "ITI / Trade courses",
+      duration: "6 months – 2 years",
+      eligibility: "After 10th",
+      fees: "Very low (often subsidized)",
+      jobs: "Electrician, fitter, mechanic, plumber, technician.",
+      salary: "₹1.5–3 LPA starting",
+      details: "Short vocational courses to acquire practical trade skills quickly. Good for early employment."
+    },
+    "bba": {
+      title: "BBA",
+      duration: "3 years",
+      eligibility: "12th pass",
+      fees: "₹30k–2 Lakh/year",
+      jobs: "Business analyst, HR, sales, marketing roles.",
+      salary: "₹2.5–7 LPA starting",
+      details: "BBA focuses on business fundamentals and management — many students pursue MBA later."
+    },
+    "nursing": {
+      title: "BSc Nursing / GNM",
+      duration: "2–4 years",
+      eligibility: "12th with PCB (for BSc Nursing) / 10+2 for GNM sometimes",
+      fees: "₹20k–1 Lakh/yr",
+      jobs: "Staff nurse, ICU nurse, community health nurse.",
+      salary: "₹2–6 LPA starting",
+      details: "Nursing provides steady employment in hospitals and clinics; demand is global with opportunities abroad."
+    },
+    "journalism": {
+      title: "Journalism & Mass Communication",
+      duration: "1–3 years (diploma/degree)",
+      eligibility: "12th or graduation",
+      fees: "₹20k–2 Lakh/year",
+      jobs: "Reporter, content writer, TV producer, editor.",
+      salary: "₹2–8 LPA starting",
+      details: "Good for those who like media, writing and storytelling. Internships and portfolio matter a lot."
+    },
+    "fashion design": {
+      title: "Fashion Design",
+      duration: "3–4 years",
+      eligibility: "12th pass",
+      fees: "₹50k–4 Lakh/year (varies widely)",
+      jobs: "Fashion designer, pattern maker, stylist.",
+      salary: "₹2–10 LPA depending on brand and skill",
+      details: "Creative field — strong portfolio and internships help get good placements."
+    }
+  }
+};
+
+/* helper list of known course keywords (map synonyms to keys in KB.courses) */
+const courseKeywords = {
+  "btech": ["btech","be","engineering","engineer"],
+  "mbbs": ["mbbs","medicine","doctor"],
+  "bsc cs": ["bsc cs","bsc computer","bsc computer science","bsccs","bsc computer science"],
+  "bcom": ["bcom","b.com"],
+  "ca": ["ca","chartered accountant"],
+  "diploma engineering": ["diploma","polytechnic","diploma engineering"],
+  "iti": ["iti","trade","trades"],
+  "bba": ["bba"],
+  "nursing": ["nursing","gnm","bsc nursing"],
+  "journalism": ["journalism","mass communication","media"],
+  "fashion design": ["fashion","fashion design","design"]
+};
+
+/* utility: find course key from a free-text message */
+function findCourseKey(msg){
+  msg = msg.toLowerCase();
+  for(const key in courseKeywords){
+    const synonyms = courseKeywords[key];
+    for(const s of synonyms){
+      if(msg.includes(s)) return key;
+    }
+  }
+  return null;
+}
+
+/* utility: find stream key from message */
+function findStreamKey(msg){
+  msg = msg.toLowerCase();
+  if(msg.includes("after 10") || msg.includes("after10") || msg.includes("after class 10") ) return "after 10";
+  if(msg.includes("after 12") || msg.includes("after12") || msg.includes("after class 12") ){
+    // look for stream words too
+    if(msg.includes("science")) return "after 12 science";
+    if(msg.includes("commerce")) return "after 12 commerce";
+    if(msg.includes("arts") || msg.includes("humanities")) return "after 12 arts";
+    // no stream specified, return generic prompt (we'll keep lastTopic as "after 12")
+    return "after 12";
+  }
+  if(msg.includes("science")) return "after 12 science";
+  if(msg.includes("commerce")) return "after 12 commerce";
+  if(msg.includes("arts") || msg.includes("humanities")) return "after 12 arts";
+  return null;
+}
+
+/* format plain text with line breaks for HTML */
+function toHtml(txt){
+  return String(txt).replace(/\n/g,'<br>');
+}
+
+/* generate reply based on message */
+function generateReply(msg){
+  const text = msg.trim().toLowerCase();
+
+  // greetings
+  if(/(^|\s)(hi|hello|hey|hii)(\s|$)/.test(text)){
+    return { reply: "Hello! 👋 I'm your Career Advisor. Ask me about courses, fees, jobs, colleges or type 'more details' after a course.", topic: null };
+  }
+
+  // user asks for "more details" or "more info" without specifying course
+  if( /\b(more details|more info|tell me more|more information|detailed|explain more)\b/.test(text) ){
+    // if user specified also a course name in same message, prefer that
+    const explicitCourse = findCourseKey(text);
+    if(explicitCourse){
+      const data = KB.courses[explicitCourse];
+      lastTopic = explicitCourse;
+      return { reply: formatCourse(data), topic: explicitCourse };
+    }
+    // otherwise use lastTopic memory
+    if(lastTopic){
+      // lastTopic might be a stream or a course
+      if(KB.streams[lastTopic]) return { reply: toHtml(KB.streams[lastTopic].details), topic: lastTopic };
+      if(KB.courses[lastTopic]) return { reply: formatCourse(KB.courses[lastTopic]), topic: lastTopic };
+    }
+    // no memory
+    return { reply: "Which course would you like more details about? (e.g., BTech, MBBS, BCom, CA, Diploma, Nursing)", topic: null };
+  }
+
+  // check if user asked explicitly about a course (BTech, MBBS etc.)
+  const courseFound = findCourseKey(text);
+  if(courseFound){
+    lastTopic = courseFound;
+    const data = KB.courses[courseFound];
+    return { reply: formatCourseSummary(data), topic: courseFound };
+  }
+
+  // check for stream queries like "after 10", "after 12 science" etc.
+  const streamFound = findStreamKey(text);
+  if(streamFound){
+    // if streamFound is "after 12" generic, ask to specify stream
+    if(streamFound === "after 12"){
+      lastTopic = "after 12";
+      return { reply: "After 12 you can choose Science / Commerce / Arts. Which one are you interested in?", topic: "after 12" };
+    }
+    lastTopic = streamFound;
+    const data = KB.streams[streamFound];
+    return { reply: toHtml(data.short) + "<br><br>Type 'more details' for deeper guidance.", topic: streamFound };
+  }
+
+  // other keywords: fees, salary, jobs
+  if(text.includes("fees") || text.includes("fee")){
+    return { reply: "Typical fee ranges:\n\n• Government colleges: ₹10k–80k/year\n• Private colleges: ₹50k–3 Lakh/year (varies by course & college)\n\nIf you tell a specific course/college I can give a better estimate.", topic: null };
+  }
+  if(text.includes("salary") || text.includes("package") || text.includes("job")){
+    return { reply: "Salary depends on course, skills and college. Rough guideline:\n\n• Freshers: ₹2–8 LPA\n• Skilled / Professional: ₹8–25 LPA\n• Top performers/companies: ₹25+ LPA\n\nAsk about a specific course to see typical salary ranges.", topic: null };
+  }
+
+  // fallback: try to be helpful: if user asked "what about ...", try course extraction again
+  const courseFallback = findCourseKey(text);
+  if(courseFallback){
+    lastTopic = courseFallback;
+    return { reply: formatCourseSummary(KB.courses[courseFallback]), topic: courseFallback };
+  }
+
+  // final fallback
+  return { reply: "Sorry, I didn't understand that completely. Try asking:\n\n• 'Courses after 12 science'\n• 'More details about BTech'\n• 'Fees for MBBS'\n\nOr type a course name (BTech, MBBS, BCom, CA, Diploma, Nursing).", topic: null };
+}
+
+/* format course short card */
+function formatCourseSummary(data){
+  if(!data) return "Sorry, I don't have that course in my database yet.";
+  let txt = `📚 ${data.title}\nDuration: ${data.duration}\nEligibility: ${data.eligibility}\nFees (typical): ${data.fees}\nTop jobs: ${data.jobs}\nTypical salary: ${data.salary}\n\nType 'more details' to read a longer description.`;
+  return toHtml(txt);
+}
+
+/* format course long details */
+function formatCourse(data){
+  if(!data) return "No detailed info available.";
+  let txt = `📘 <strong>${data.title}</strong>\n\nDuration: ${data.duration}\nEligibility: ${data.eligibility}\nFees (typical): ${data.fees}\nTop colleges: ${data.top_colleges}\nCommon jobs: ${data.jobs}\nTypical salary: ${data.salary}\n\nOverview:\n${data.details}`;
+  // we used some <strong> for tiny emphasis in long view; convert newlines to <br> later.
+  // Keep HTML safe minimal.
+  return String(txt).replace(/\n/g,'<br>');
+}
+
+/* ========= UI functions ========= */
+
+const chatBox = document.getElementById('chat-box');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+
+function appendMessage(text, cls, typing=false, callback=null){
+  const el = document.createElement('div');
+  el.className = 'message ' + cls;
+  if(!typing){
+    // replace newlines with <br>
+    el.innerHTML = text.replace(/\n/g,'<br>');
+    if(callback) callback();
+  } else {
+    // typing simulation (reveal characters)
+    let i = 0;
+    const raw = String(text).replace(/<br>/g,'\n'); // ensure consistent internal representation
+    const timer = setInterval(()=>{
+      i++;
+      el.innerHTML = escapeHtml(raw.slice(0,i)).replace(/\n/g,'<br>');
+      if(i >= raw.length) {
+        clearInterval(timer);
+        if(callback) callback();
+      }
+      // scroll while typing
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }, 18); // speed: 18ms/char
+  }
+  chatBox.appendChild(el);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* escape HTML to avoid broken tags while typing */
+function escapeHtml(unsafe) {
+    return unsafe.replace(/[&<"'>]/g, function(m) {
+        switch(m){
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            default: return m;
+        }
+    });
+}
+
+/* main send handler */
+function sendMessage(){
+  const text = input.value.trim();
+  if(!text) return;
+  appendMessage(escapeHtml(text), 'user', false, () => sendSound.play());
+  input.value = '';
+  // compute reply
+  const result = generateReply(text);
+  // small delay then typing bot reply
+  setTimeout(()=>{
+    // for safety ensure result.reply is string
+    const botText = (typeof result.reply === 'string') ? result.reply : String(result.reply);
+    // show typing bubble first with small 'typing' indicator
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'message bot';
+    typingBubble.innerHTML = '<em>Typing</em><span class="typing" aria-hidden="true"></span>';
+    chatBox.appendChild(typingBubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    // replace after short delay proportional to message length
+    const delay = Math.min(900 + botText.length * 12, 2200);
+    setTimeout(()=>{
+      chatBox.removeChild(typingBubble);
+      // append typed bot message gradually
+      appendMessage(botText, 'bot', true, () => receiveSound.play());
+    }, delay);
+  }, 220);
+}
+
+/* send on button click */
+sendBtn.addEventListener('click', sendMessage);
+
+/* send on enter key */
+input.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+/* initial greeting */
+window.addEventListener('load', ()=> {
+  setTimeout(()=> {
+    const greet = "Hello! 👋 I can help with courses after 10/12, fees, job scope and salary. Try: 'Courses after 12 science' or 'More details about BTech'.";
+    appendMessage(greet, 'bot', true);
+  }, 300);
+});
+
+</script>
+
+</body>
+</html>
